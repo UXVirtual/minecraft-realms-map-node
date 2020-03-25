@@ -3,16 +3,19 @@ const storage = require('node-persist');
 
 const prompt = require('prompt');
 
+// TODO: add check that .env file is created
+
 const ygg = require('yggdrasil')({
   host: process.env.MOJANG_URL // Optional custom host. No trailing slash.
 });
 
 async function refreshToken(oldAccessToken) {
+  console.log('Refreshing token');
   const clientToken = await storage.getItem('clientToken');
 
   return new Promise((resolve, reject) => {
     ygg.refresh(oldAccessToken, clientToken, function(err, newAccessToken, response, body) {
-      if (err) {
+      if (err !== null) {
         reject(err);
       } else {
         console.log('Got refresh token response: ', response);
@@ -24,12 +27,18 @@ async function refreshToken(oldAccessToken) {
 
 async function getValidToken(accessToken) {
   return new Promise((resolve, reject) => {
-    ygg.validate(accessToken, err => {
+    console.log('Validating access token: ', accessToken);
+    ygg.validate(accessToken, async err => {
+      console.log('Access token validated');
       console.log(err);
 
-      if (err) {
-        refreshToken(accessToken);
-        reject(err);
+      if (err !== null) {
+        try {
+          const refreshedToken = await refreshToken(accessToken);
+          resolve(refreshedToken);
+        } catch (err) {
+          reject(err);
+        }
       } else {
         resolve(accessToken);
       }
@@ -39,29 +48,22 @@ async function getValidToken(accessToken) {
 
 async function authenticateUser(username, password) {
   // Authenticate a user
-
-  let accessToken = await storage.getItem('accessToken');
+  console.log('Authenticating with username: ', username);
 
   const config = {
     agent: 'backup-client', // Agent name. Defaults to 'Minecraft'
-    version: 0.1 // Agent version. Defaults to 1
+    version: 1, // Agent version. Defaults to 1
+    token: '' // NOTE: somehow providing client token causes auth process to fail
   };
 
-  if (accessToken) {
-    accessToken = await getValidToken(accessToken);
-    console.log('Got access token from storage: ', accessToken);
-    config.token = accessToken;
-    await storage.setItem('accessToken', accessToken);
-  } else if (username && password) {
-    config.user = username;
-    config.pass = password;
-  } else {
-    return Promise.reject(new Error('Failed to enter username and password'));
-  }
+  config.user = username;
+  config.pass = password;
 
   return new Promise((resolve, reject) => {
     ygg.auth(config, (err, data) => {
-      if (err) {
+      console.log('Got auth result: ', data);
+      console.log('Got auth error: ', err);
+      if (err !== null) {
         console.error('Error: ', err);
         reject(err);
       } else {
@@ -88,6 +90,7 @@ async function getUserCredentials() {
     //
     // Start the prompt
     //
+    console.log('Enter username and password: ');
     prompt.start();
     prompt.get(schema, (err, result) => {
       if (err) {
@@ -103,18 +106,11 @@ async function init() {
   // you must first call storage.init
   await storage.init();
 
-  const clientToken = await storage.getItem('clientToken');
-
-  console.log('Client token: ', clientToken);
-
   let username;
   let password;
 
-  if (!clientToken) {
-    const credentials = await getUserCredentials();
-    username = credentials.username;
-    password = credentials.password;
-  }
+  username = process.env.MOJANG_USERNAME;
+  password = process.env.MOJANG_PASSWORD;
 
   const authData = await authenticateUser(username, password);
 

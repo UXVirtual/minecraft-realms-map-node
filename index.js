@@ -102,22 +102,53 @@ async function getUserCredentials() {
   });
 }
 
+async function downloadWorldBackup() {
+  return new Promise((resolve, reject) => {
+    // NOTE: port minecraft-realms-map.sh to node.js from this repo: https://github.com/UXVirtual/minecraft-realms-map
+
+    // TODO: make request to REALMS_WORLD_URL to get realm ID
+    // TODO: get world backup URL based on realm ID
+    // TODO: download world backup zip and attempt up to 2 retries before failing
+    // TODO: extract world backup to disk
+    // TODO: clean old backups from disk
+    // TODO: trigger Minecraft Overviewer to generate map
+    // TODO: use AWS API to sync map to S3 bucket
+    // TODO: clean logs older than 7 days
+  });
+}
+
+async function storeAccessToken() {
+  return new Promise((resolve, reject) => {
+    let username;
+    let password;
+
+    username = process.env.MOJANG_USERNAME;
+    password = process.env.MOJANG_PASSWORD;
+
+    try{
+      const authData = await authenticateUser(username, password);
+
+      console.log('AuthData: ', authData);
+  
+      await storage.setItem('accessToken', authData.accessToken);
+      await storage.setItem('clientToken', authData.clientToken);
+
+      resolve(authData.accessToken)
+    } catch (err) {
+      reject(err)
+    }
+    
+
+    
+  });
+  
+}
+
 async function init() {
   // you must first call storage.init
   await storage.init();
-
-  let username;
-  let password;
-
-  username = process.env.MOJANG_USERNAME;
-  password = process.env.MOJANG_PASSWORD;
-
-  const authData = await authenticateUser(username, password);
-
-  console.log('AuthData: ', authData);
-
-  await storage.setItem('accessToken', authData.accessToken);
-  await storage.setItem('clientToken', authData.clientToken);
+  await storeAccessToken();
+  await downloadWorldBackup();
 }
 
 init();

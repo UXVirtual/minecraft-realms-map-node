@@ -1,7 +1,7 @@
 require('dotenv').config()
 const storage = require('node-persist')
 const rp = require('request-promise')
-const { spawn, execSync, exec } = require('child_process')
+const { spawn, execSync } = require('child_process')
 const moment = require('moment')
 
 // TODO: add check that .env file is created
@@ -109,6 +109,7 @@ async function downloadWorldBackup() {
       try {
         await downloadAndVerifyWorld(backupURL)
       } catch (error) {
+        console.warn(error)
         reject('Failed to download valid world backup')
       }
     }
@@ -120,11 +121,6 @@ async function downloadWorldBackup() {
     // TODO: make request to REALMS_WORLD_URL to get realm ID
     // TODO: get world backup URL based on realm ID
     // TODO: download world backup zip and attempt up to 2 retries before failing
-    // TODO: extract world backup to disk
-    // TODO: clean old backups from disk
-    // TODO: trigger Minecraft Overviewer to generate map
-    // TODO: use AWS API to sync map to S3 bucket
-    // TODO: clean logs older than 7 days
   })
 }
 
@@ -150,8 +146,10 @@ async function downloadAndVerifyWorld(backupURL) {
 
     try {
       await verifyWorldBackup(path)
+      console.log('validation successful')
       resolve(path)
     } catch (error) {
+      console.log('Verification failed')
       console.warn(error)
       await storage.removeItem('lastBackup')
       reject(error)
@@ -220,15 +218,29 @@ async function downloadFromURL(url) {
 async function verifyWorldBackup(path) {
   console.log('Verifying world backup at: ', path)
   return new Promise((resolve, reject) => {
-    exec(`tar -xvzf "${path}" -O > /dev/null`, (error, stdout, stderr) => {
-      if (error) {
-        reject(error.message)
-      } else if (stderr) {
-        reject('Failed to validate backup')
-      } else {
-        resolve()
-      }
-    })
+    let output
+    try {
+      output = execSync(`tar -xvzf "${path}" -O > /dev/null`)
+    } catch (error) {
+      reject(error.stdout)
+    }
+
+    resolve(output)
+  })
+}
+
+async function extractWorldBackup(backupPath) {
+  const extractPath = process.env.WORLD_PATH
+  console.log(`Extracting world backup to: ${extractPath}`)
+  return new Promise((resolve, reject) => {
+    let output
+    try {
+      output = execSync(`tar -xvf "${backupPath}" ${extractPath}`)
+    } catch (error) {
+      reject(error.stdout)
+    }
+
+    resolve(output)
   })
 }
 
@@ -290,10 +302,25 @@ async function init() {
 
   try {
     path = await downloadWorldBackup()
+    console.log(`Valid world backup downloaded to: ${path}`)
   } catch (error) {
     console.log('Failed to download world backup')
     console.error(error)
   }
+
+  try {
+    await extractWorldBackup(path)
+    console.log(`Successfully extracted world backup to: ${process.env.WORLD_PATH}`)
+  } catch (error) {
+    console.log('Failed to extract world backup')
+    console.error(error)
+  }
+
+  // TODO: extract world backup to disk
+  // TODO: clean old backups from disk
+  // TODO: trigger Minecraft Overviewer to generate map
+  // TODO: use AWS API to sync map to S3 bucket
+  // TODO: clean logs older than 7 days
 }
 
 init()

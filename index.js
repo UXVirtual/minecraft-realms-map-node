@@ -1,6 +1,8 @@
 require('dotenv').config()
 const storage = require('node-persist')
 const rp = require('request-promise')
+const { spawn, execSync, exec } = require('child_process')
+const moment = require('moment')
 
 // TODO: add check that .env file is created
 
@@ -11,14 +13,12 @@ const ygg = require('yggdrasil')({
 async function storeRefreshToken() {
   const tempAccessToken = await storage.getItem('tempAccessToken')
   const clientToken = await storage.getItem('clientToken')
-  console.log('Refreshing token: ', tempAccessToken)
+  console.log('Getting access token...')
   return new Promise(async (resolve, reject) => {
-    ygg.refresh(tempAccessToken, clientToken, async function(err, newAccessToken, response) {
-      if (err !== null) {
-        reject(err)
+    ygg.refresh(tempAccessToken, clientToken, async function(error, newAccessToken, response) {
+      if (error !== null) {
+        reject(error)
       } else {
-        console.log('Response: ', response)
-        console.log('Stored long life access token: ', response.accessToken)
         await storage.setItem('accessToken', response.accessToken)
         resolve(response.accessToken)
       }
@@ -32,16 +32,17 @@ async function authenticateUser(username, password) {
 
   const config = {
     token: process.env.CLIENT_ID, // NOTE: somehow providing client token causes auth process to fail
+    version: process.env.CLIENT_VERSION,
   }
 
   config.user = username
   config.pass = password
 
   return new Promise((resolve, reject) => {
-    ygg.auth(config, (err, data) => {
-      if (err !== null) {
-        console.error('Error: ', err)
-        reject(err)
+    ygg.auth(config, (error, data) => {
+      if (error !== null) {
+        console.error('Error: ', error)
+        reject(error)
       } else {
         resolve(data)
       }
@@ -64,17 +65,54 @@ async function storeUUID() {
       await storage.setItem('playerUUID', profile.id)
       console.log('Stored playerUUID: ', profile.id)
       resolve(profile.id)
-    } catch (err) {
-      reject(err)
+    } catch (error) {
+      reject(error)
     }
   })
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 async function downloadWorldBackup() {
   return new Promise(async (resolve, reject) => {
-    //
-    const realmID = await getRealmID()
-    console.log(realmID)
+    const servers = await getRealmsServers()
+    servers.filter(server => {
+      return server.realmsSubscriptionId === process.env.REALMS_SUBSCRIPTION_ID
+    })
+
+    const realmID = servers[0].id
+    let backupURL
+    try {
+      backupURL = await getWorldBackupURL(realmID)
+    } catch (error) {
+      if (error.statusCode === 503) {
+        console.warn('WARNING: Rate limited. Waiting for 30 sec, then retrying...')
+        await sleep(30000)
+        console.log('Retrying...')
+        try {
+          backupURL = await getWorldBackupURL(realmID)
+        } catch (error) {
+          reject('Failed to get world backup url')
+        }
+      }
+    }
+
+    try {
+      const path = await downloadAndVerifyWorld(backupURL)
+      resolve(path)
+    } catch (error) {
+      console.log('Verification failed. Waiting for 30 sec, then re-downloading...')
+      await sleep(30000)
+      console.log('Retrying...')
+      try {
+        await downloadAndVerifyWorld(backupURL)
+      } catch (error) {
+        reject('Failed to download valid world backup')
+      }
+    }
+
     // NOTE: port minecraft-realms-map.sh to node.js from this repo: https://github.com/UXVirtual/minecraft-realms-map
     // NOTE: see Realms API here: https://wiki.vg/Realms_API
     // NOTE: see Mojang API here: https://wiki.vg/Mojang_API
@@ -90,9 +128,40 @@ async function downloadWorldBackup() {
   })
 }
 
+async function downloadAndVerifyWorld(backupURL) {
+  let path = await storage.getItem('lastBackup')
+
+  return new Promise(async (resolve, reject) => {
+    if (!path) {
+      try {
+        path = await downloadFromURL(backupURL)
+      } catch (error) {
+        console.warn('Error while downloading backup. Waiting for 30 sec, then retrying...')
+        await sleep(30000)
+        console.log('Retrying...')
+
+        try {
+          path = await downloadFromURL(backupURL)
+        } catch (error) {
+          reject('Failed on 2nd retry. Aborting.')
+        }
+      }
+    }
+
+    try {
+      await verifyWorldBackup(path)
+      resolve(path)
+    } catch (error) {
+      console.warn(error)
+      await storage.removeItem('lastBackup')
+      reject(error)
+    }
+  })
+}
+
 function constructRealmsHeaders(accessToken, playerUUID) {
   const headers = {
-    Cookie: `sid=token:${accessToken}:${playerUUID};user=${process.env.MOJANG_USERNAME};version=${process.env.VERSION}`,
+    Cookie: `sid=token:${accessToken}:${playerUUID};user=${process.env.MOJANG_USERNAME};version=${process.env.CLIENT_VERSION}`,
     'Cache-Control': 'no-cache',
     Pragma: 'no-cache',
     'User-Agent': `Java/1.8.0_101`,
@@ -101,16 +170,73 @@ function constructRealmsHeaders(accessToken, playerUUID) {
     Connection: 'keep-alive',
     'Content-Type': 'application/json',
   }
-  console.log('Constructed headers: ', headers)
+
   return headers
 }
 
-async function getRealmID() {
+async function getWorldBackupURL(realmID) {
   const accessToken = await storage.getItem('accessToken')
   const playerUUID = await storage.getItem('playerUUID')
-
+  const uri = `https://${process.env.REALMS_HOST}/worlds/${realmID}/slot/1/download`
+  console.log('Getting world backup url...')
   return new Promise(async (resolve, reject) => {
-    console.log('Getting realm ID')
+    const request = {
+      method: 'GET',
+      uri,
+      headers: constructRealmsHeaders(accessToken, playerUUID),
+    }
+
+    try {
+      // Make the request and return the token
+      const response = await rp(request)
+      resolve(JSON.parse(response).downloadLink)
+    } catch (error) {
+      reject(error)
+    }
+  })
+}
+
+async function downloadFromURL(url) {
+  const date = moment().format('YYYY-MM-DD')
+  const backupPath = `${process.env.BACKUP_PATH}/mcr_world_${date}.tar.gz`
+  await storage.setItem('lastBackup', backupPath)
+
+  console.log('Downloading backup...')
+  return new Promise((resolve, reject) => {
+    const curl = spawn('curl', ['-o', backupPath, '-k', url, '--progress-bar'], {
+      stdio: 'inherit',
+    })
+
+    curl.on('exit', async function(code) {
+      if (code === 0) {
+        resolve(backupPath)
+      } else {
+        reject(`Failed to download backup. Curl exited with code: ${code.toString()}`)
+      }
+    })
+  })
+}
+
+async function verifyWorldBackup(path) {
+  console.log('Verifying world backup at: ', path)
+  return new Promise((resolve, reject) => {
+    exec(`tar -xvzf "${path}" -O > /dev/null`, (error, stdout, stderr) => {
+      if (error) {
+        reject(error.message)
+      } else if (stderr) {
+        reject('Failed to validate backup')
+      } else {
+        resolve()
+      }
+    })
+  })
+}
+
+async function getRealmsServers() {
+  const accessToken = await storage.getItem('accessToken')
+  const playerUUID = await storage.getItem('playerUUID')
+  console.log('Getting realm details')
+  return new Promise(async (resolve, reject) => {
     const request = {
       method: 'GET',
       uri: `https://${process.env.REALMS_HOST}/worlds`,
@@ -120,11 +246,9 @@ async function getRealmID() {
     try {
       // Make the request and return the token
       const response = await rp(request)
-
-      console.log('Realm ID response: ', JSON.parse(response))
-      resolve(JSON.parse(response))
-    } catch (err) {
-      reject(err)
+      resolve(JSON.parse(response).servers)
+    } catch (error) {
+      reject(error)
     }
   })
 }
@@ -140,14 +264,12 @@ async function storeAccessToken() {
     try {
       const authData = await authenticateUser(username, password)
 
-      console.log('AuthData: ', authData)
-
       await storage.setItem('tempAccessToken', authData.accessToken)
       await storage.setItem('clientToken', authData.clientToken)
 
       resolve(authData.accessToken)
-    } catch (err) {
-      reject(err)
+    } catch (error) {
+      reject(error)
     }
   })
 }
@@ -155,10 +277,23 @@ async function storeAccessToken() {
 async function init() {
   // you must first call storage.init
   await storage.init()
-  await storeAccessToken()
-  await storeRefreshToken()
-  await storeUUID()
-  await downloadWorldBackup()
+  const accessToken = await storage.getItem('accessToken')
+  if (accessToken) {
+    console.log('Using access token from storage...')
+  } else {
+    await storeAccessToken()
+    await storeRefreshToken()
+    await storeUUID()
+  }
+
+  let path
+
+  try {
+    path = await downloadWorldBackup()
+  } catch (error) {
+    console.log('Failed to download world backup')
+    console.error(error)
+  }
 }
 
 init()

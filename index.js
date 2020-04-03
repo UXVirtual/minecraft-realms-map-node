@@ -3,6 +3,7 @@ const storage = require('node-persist')
 const rp = require('request-promise')
 const { spawn, execSync } = require('child_process')
 const moment = require('moment')
+const wrap = require('minecraft-wrap')
 
 // TODO: add check that .env file is created
 
@@ -113,14 +114,6 @@ async function downloadWorldBackup() {
         reject('Failed to download valid world backup')
       }
     }
-
-    // NOTE: port minecraft-realms-map.sh to node.js from this repo: https://github.com/UXVirtual/minecraft-realms-map
-    // NOTE: see Realms API here: https://wiki.vg/Realms_API
-    // NOTE: see Mojang API here: https://wiki.vg/Mojang_API
-
-    // TODO: make request to REALMS_WORLD_URL to get realm ID
-    // TODO: get world backup URL based on realm ID
-    // TODO: download world backup zip and attempt up to 2 retries before failing
   })
 }
 
@@ -222,10 +215,10 @@ async function verifyWorldBackup(path) {
     try {
       output = execSync(`tar -xvzf "${path}" -O > /dev/null`)
     } catch (error) {
-      reject(error.stdout)
+      reject(error.stdout.toString())
     }
 
-    resolve(output)
+    resolve(output.toString())
   })
 }
 
@@ -237,10 +230,67 @@ async function extractWorldBackup(backupPath) {
     try {
       output = execSync(`tar -xvf "${backupPath}" ${extractPath}`)
     } catch (error) {
-      reject(error.stdout)
+      reject(error.stdout.toString())
     }
 
-    resolve(output)
+    resolve(output.toString())
+  })
+}
+
+async function cleanOldBackups() {
+  const retentionDays = process.env.BACKUP_RETENTION
+
+  console.log(`Removing backups older than ${retentionDays} days...`)
+  return new Promise((resolve, reject) => {
+    let output
+    try {
+      output = execSync(
+        `find "${process.env.BACKUP_PATH}/*.tar.gz -mtime +${retentionDays} -type f -delete"`,
+      )
+    } catch (error) {
+      if (error.status === 1) {
+        // Resolve anyway because there were no old files to delete
+        console.warn(`No files older than ${retentionDays} days found.`)
+        resolve(output)
+      } else {
+        console.log('error: ', error)
+        reject(error.stdout.toString())
+      }
+    }
+
+    resolve(output.toString())
+  })
+}
+
+async function generateMap() {
+  let clientPath
+  try {
+    clientPath = await downloadMinecraftClient()
+  } catch (error) {
+    console.log('error: ', error)
+    reject('Failed to download minecraft client')
+  }
+
+  const startDate = moment().format('YYYY-MM-DD @ HH:mm:ss')
+  console.log(`Started map generation: ${startDate}`)
+  return new Promise((resolve, reject) => {
+    let output
+    const command = `export IN_DIR=${process.env.WORLD_PATH}; export OUT_DIR=${
+      process.env.OUTPUT_PATH
+    }; export TEXTURE_PATH=${process.cwd()}/${clientPath}; ${
+      process.env.OVERVIEWER_PATH
+    } --config=${process.env.OVERVIEWER_CONFIG_PATH} --processes=${process.env.HARDWARE_THREADS}`
+    console.log('Generating map: ', command)
+    try {
+      output = execSync(command)
+    } catch (error) {
+      reject(error.stdout.toString())
+    }
+
+    const endDate = moment().format('YYYY-MM-DD @ HH:mm:ss')
+    console.log(`Finished map generation: ${endDate}`)
+
+    resolve(output.toString())
   })
 }
 
@@ -286,6 +336,19 @@ async function storeAccessToken() {
   })
 }
 
+async function downloadMinecraftClient() {
+  const version = process.env.MINECRAFT_VERSION
+  const path = `${process.env.MINECRAFT_JAR_PATH}/client.jar`
+
+  console.log('Downloading minecraft client jar...')
+  return new Promise(async (resolve, reject) => {
+    wrap.downloadClient(version, path, () => {
+      console.log('Download complete. Saved to', path)
+      resolve(path)
+    })
+  })
+}
+
 async function init() {
   // you must first call storage.init
   await storage.init()
@@ -304,21 +367,33 @@ async function init() {
     path = await downloadWorldBackup()
     console.log(`Valid world backup downloaded to: ${path}`)
   } catch (error) {
-    console.log('Failed to download world backup')
     console.error(error)
+    console.log('Failed to download world backup')
   }
 
   try {
     await extractWorldBackup(path)
     console.log(`Successfully extracted world backup to: ${process.env.WORLD_PATH}`)
   } catch (error) {
-    console.log('Failed to extract world backup')
     console.error(error)
+    console.log('Failed to extract world backup')
   }
 
-  // TODO: extract world backup to disk
-  // TODO: clean old backups from disk
-  // TODO: trigger Minecraft Overviewer to generate map
+  try {
+    await cleanOldBackups()
+    console.log(`Successfully cleaned old world backups`)
+  } catch (error) {
+    console.error(error)
+    console.log('Failed to clean old world backup')
+  }
+
+  try {
+    await generateMap()
+  } catch (error) {
+    console.error(error)
+    console.log('Failed to generate map')
+  }
+
   // TODO: use AWS API to sync map to S3 bucket
   // TODO: clean logs older than 7 days
 }

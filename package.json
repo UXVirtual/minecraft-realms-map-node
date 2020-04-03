@@ -20,6 +20,7 @@
   "homepage": "https://github.com/UXVirtual/minecraft-realms-map-node#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "minecraft-wrap": "^1.2.3",
     "moment": "^2.24.0",
     "node-persist": "^3.0.5",
     "prompt": "^1.0.0",

@@ -6,6 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write '*.js'",
+    "generate": "export IN_DIR=world; export OUT_DIR=output; export TEXTURE_PATH=~/code/minecraft-realms-map-node/jar/client.jar; bin/overviewer/overviewer.py --config=overviewer.cfg.py --processes=8",
+    "preview": "ws --directory output",
     "start": "node index.js"
   },
   "repository": {
@@ -20,6 +22,7 @@
   "homepage": "https://github.com/UXVirtual/minecraft-realms-map-node#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "local-web-server": "^4.0.0",
     "minecraft-wrap": "^1.2.3",
     "moment": "^2.24.0",
     "node-persist": "^3.0.5",

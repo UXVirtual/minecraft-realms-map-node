@@ -23,7 +23,7 @@ cd bin
 # install pillow
 echo "Installing pillow"
 
-python3 -m pip install Pillow
+python3 -m pip install numpy pillow
 #curl "https://codeload.github.com/python-pillow/Pillow/tar.gz/7.1.1" -o "pillow.tar.gz"
 mkdir "pillow"
 tar -xvf "pillow.tar.gz" -C "pillow" --strip-components 1
@@ -43,10 +43,12 @@ rm "overviewer-latest.tar.gz"
 cp "pillow/src/libImaging/Imaging.h" "overviewer"
 cp "pillow/src/libImaging/ImagingUtils.h" "overviewer"
 cp "pillow/src/libImaging/ImPlatform.h" "overviewer"
-python3 -m pip install numpy
 cd overviewer
 python3 setup.py build
 cd ../../
+
+# copy custom icons to overviewer
+cp icons/*.png bin/overviewer/overviewer_core/data/web_assets/icons
 
 # create .env file
 echo "Creating .env file..."

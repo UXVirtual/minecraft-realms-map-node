@@ -11,7 +11,7 @@ def filterByProfession(poi, profession):
 
 
 def villagerData(poi):
-    #print repr(poi)
+    #print(repr(poi))
     profession = poi['VillagerData']['profession'].replace('minecraft:', '')
     tradeText = ''
 
@@ -202,13 +202,53 @@ renders["Overworld"] = {
     "rendermode": "smooth_lighting",
     "dimension": "overworld",
     "world": "Moria",
-    "minzoom": 16,
+    "minzoom": 14,
     'manualpois': [
         {'id': 'Town',
              'x': 0,
              'y': 64,
              'z': 0,
-         'name': "Test town"}
+         'name': "Mooshroom Island"},
+         {'id': 'Town',
+             'x': 0,
+             'y': 64,
+             'z': -4400,
+         'name': "CrimsonEbony's Town"},
+         {'id': 'Town',
+             'x': -1430,
+             'y': 64,
+             'z': 760,
+         'name': "TheSocrates Forest Town"},
+         {'id': 'Town',
+             'x': 3288,
+             'y': 64,
+             'z': -1967,
+         'name': "generrosity's Town"},
+         {'id': 'Town',
+             'x': 100,
+             'y': 64,
+             'z': -3400,
+         'name': "cy-bob's Desert Town"},
+         {'id': 'Town',
+             'x': 1136,
+             'y': 64,
+             'z': -2668,
+         'name': "darkling's Base"},
+         {'id': 'Town',
+             'x': -6200,
+             'y': 64,
+             'z': 4200,
+         'name': "Jaxak's Base"},
+         {'id': 'Town',
+             'x': 4400,
+             'y': 64,
+             'z': -2200,
+         'name': "Verona's Town"},
+         {'id': 'Town',
+             'x': 770,
+             'y': 64,
+             'z': 880,
+         'name': "smallpooka's Desert Town"}
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,
@@ -265,7 +305,7 @@ renders["Caves"] = {
     "dimension": "overworld",
     "rendermode": "cave",
     "world": "Moria",
-    "minzoom": 16
+    "minzoom": 14
 }
 renders["Woria"] = {
     "title": "Woria (Nether)",

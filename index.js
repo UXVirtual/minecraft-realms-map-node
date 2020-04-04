@@ -394,6 +394,8 @@ async function init() {
     console.log('Failed to generate map')
   }
 
+  // TODO: run generatePOI() to generate map markers
+
   // TODO: use AWS API to sync map to S3 bucket
   // TODO: clean logs older than 7 days
 }

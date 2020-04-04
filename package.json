@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write '*.js'",
-    "generate": "export IN_DIR=world; export OUT_DIR=output; export TEXTURE_PATH=~/code/minecraft-realms-map-node/jar/client.jar; bin/overviewer/overviewer.py --config=overviewer.cfg.py --processes=8",
+    "generate:map": "export IN_DIR=world; export OUT_DIR=output; export TEXTURE_PATH=~/code/minecraft-realms-map-node/jar/client.jar; bin/overviewer/overviewer.py --config=overviewer.cfg.py --processes=8",
+    "generate:poi": "export IN_DIR=world; export OUT_DIR=output; export TEXTURE_PATH=~/code/minecraft-realms-map-node/jar/client.jar; bin/overviewer/overviewer.py --config=overviewer.cfg.py --processes=8  --genpoi",
     "preview": "ws --directory output",
     "start": "node index.js"
   },

@@ -264,17 +264,20 @@ renders["Caves"] = {
     "title": "Caves",
     "dimension": "overworld",
     "rendermode": "cave",
-    "world": "Moria"
+    "world": "Moria",
+    "minzoom": 16
 }
 renders["Woria"] = {
     "title": "Woria (Nether)",
     "rendermode": "nether",
     "dimension": "nether",
-    "world": "Moria"
+    "world": "Moria",
+    "minzoom": 16
 }
 renders["End"] = {
     "title": "The End",
     "rendermode": "smooth_lighting",
     "dimension": "end",
-    "world": "Moria"
+    "world": "Moria",
+    "minzoom": 16
 }

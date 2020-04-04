@@ -300,13 +300,6 @@ renders["Overworld"] = {
              icon="icons/marker_profession_weaponsmith.png")
     ],
 }
-renders["Caves"] = {
-    "title": "Caves",
-    "dimension": "overworld",
-    "rendermode": "cave",
-    "world": "Moria",
-    "minzoom": 14
-}
 renders["Woria"] = {
     "title": "Woria (Nether)",
     "rendermode": "nether",

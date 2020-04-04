@@ -262,7 +262,7 @@ async function cleanOldBackups() {
   })
 }
 
-async function generateMap() {
+async function generateMap(onlyGeneratePOI) {
   let clientPath
   try {
     clientPath = await downloadMinecraftClient()
@@ -279,7 +279,9 @@ async function generateMap() {
       process.env.OUTPUT_PATH
     }; export TEXTURE_PATH=${process.cwd()}/${clientPath}; ${
       process.env.OVERVIEWER_PATH
-    } --config=${process.env.OVERVIEWER_CONFIG_PATH} --processes=${process.env.HARDWARE_THREADS}`
+    } --config=${process.env.OVERVIEWER_CONFIG_PATH} --processes=${process.env.HARDWARE_THREADS}${
+      onlyGeneratePOI ? ' --genpoi' : ''
+    }`
     console.log('Generating map: ', command)
     try {
       output = execSync(command)
@@ -350,7 +352,6 @@ async function downloadMinecraftClient() {
 }
 
 async function init() {
-  // you must first call storage.init
   await storage.init()
   const accessToken = await storage.getItem('accessToken')
   if (accessToken) {
@@ -394,7 +395,13 @@ async function init() {
     console.log('Failed to generate map')
   }
 
-  // TODO: run generatePOI() to generate map markers
+  console.log('Generating points of interest...')
+  try {
+    await generateMap(true)
+  } catch (error) {
+    console.error(error)
+    console.log('Failed to generate points of interest')
+  }
 
   // TODO: use AWS API to sync map to S3 bucket
   // TODO: clean logs older than 7 days

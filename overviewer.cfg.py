@@ -248,7 +248,12 @@ renders["Overworld"] = {
              'x': 770,
              'y': 64,
              'z': 880,
-         'name': "smallpooka's Desert Town"}
+         'name': "smallpooka's Desert Town"},
+         {'id': 'Town',
+             'x': -615,
+             'y': 64,
+             'z': 133,
+         'name': "generic_mine's Base"}
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,

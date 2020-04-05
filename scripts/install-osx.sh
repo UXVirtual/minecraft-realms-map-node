@@ -15,7 +15,7 @@ else
 fi
 
 # install build tools
-brew install cmake s3cmd python3
+brew install cmake python3 aws
 sudo easy_install pip
 
 cd bin
@@ -30,8 +30,7 @@ tar -xvf "pillow.tar.gz" -C "pillow" --strip-components 1
 rm "pillow.tar.gz"
 
 # install aws CLI
-curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
-sudo installer -pkg AWSCLIV2.pkg -target /
+python3 -m pip awscli --upgrade --user
 
 # install overviewer
 echo "Installing overviewer"

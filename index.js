@@ -192,7 +192,7 @@ async function downloadFromURL(url) {
   const backupPath = `${process.env.BACKUP_PATH}/mcr_world_${date}.tar.gz`
   await storage.setItem('lastBackup', backupPath)
 
-  console.log('Downloading backup...')
+  logWithTimestamp('Started downloading backup')
   return new Promise((resolve, reject) => {
     const curl = spawn('curl', ['-o', backupPath, '-k', url, '--progress-bar'], {
       stdio: 'inherit',
@@ -200,6 +200,7 @@ async function downloadFromURL(url) {
 
     curl.on('exit', async function(code) {
       if (code === 0) {
+        logWithTimestamp('Finished downloading backup')
         resolve(backupPath)
       } else {
         reject(`Failed to download backup. Curl exited with code: ${code.toString()}`)
@@ -271,8 +272,8 @@ async function generateMap(onlyGeneratePOI) {
     reject('Failed to download minecraft client')
   }
 
-  const startDate = moment().format('YYYY-MM-DD @ HH:mm:ss')
-  console.log(`Started map generation: ${startDate}`)
+  logWithTimestamp('Started map generation')
+
   return new Promise((resolve, reject) => {
     let output
     const command = `export IN_DIR=${process.env.WORLD_PATH}; export OUT_DIR=${
@@ -289,10 +290,41 @@ async function generateMap(onlyGeneratePOI) {
       reject(error.stdout.toString())
     }
 
-    const endDate = moment().format('YYYY-MM-DD @ HH:mm:ss')
-    console.log(`Finished map generation: ${endDate}`)
+    logWithTimestamp('Finished map generation')
 
     resolve(output.toString())
+  })
+}
+
+async function uploadMap() {
+  logWithTimestamp('Started uploading to S3')
+
+  return new Promise((resolve, reject) => {
+    const awsS3Sync = spawn(
+      'aws',
+      [
+        's3',
+        'sync',
+        process.env.OUTPUT_PATH,
+        `s3://${process.env.S3_BUCKET_PATH}`,
+        '--delete',
+        '--quiet',
+        '--profile',
+        'minecraft-s3-map-uploader',
+      ],
+      {
+        stdio: 'inherit',
+      },
+    )
+
+    awsS3Sync.on('exit', async function(code) {
+      if (code === 0) {
+        logWithTimestamp('Finished uploading to S3')
+        resolve()
+      } else {
+        reject(`Failed to upload to S3. AWS CLI exited with code: ${code.toString()}`)
+      }
+    })
   })
 }
 
@@ -338,6 +370,11 @@ async function storeAccessToken() {
   })
 }
 
+function logWithTimestamp(message) {
+  const date = moment().format('YYYY-MM-DD @ HH:mm:ss')
+  console.log(`${message}: ${date}`)
+}
+
 async function downloadMinecraftClient() {
   const version = process.env.MINECRAFT_VERSION
   const path = `${process.env.MINECRAFT_JAR_PATH}/client.jar`
@@ -370,6 +407,7 @@ async function init() {
   } catch (error) {
     console.error(error)
     console.log('Failed to download world backup')
+    return
   }
 
   try {
@@ -378,6 +416,7 @@ async function init() {
   } catch (error) {
     console.error(error)
     console.log('Failed to extract world backup')
+    return
   }
 
   try {
@@ -386,6 +425,7 @@ async function init() {
   } catch (error) {
     console.error(error)
     console.log('Failed to clean old world backup')
+    return
   }
 
   try {
@@ -393,6 +433,7 @@ async function init() {
   } catch (error) {
     console.error(error)
     console.log('Failed to generate map')
+    return
   }
 
   console.log('Generating points of interest...')
@@ -401,9 +442,16 @@ async function init() {
   } catch (error) {
     console.error(error)
     console.log('Failed to generate points of interest')
+    return
+
+  try {
+    await uploadMap(true)
+  } catch (error) {
+    console.error(error)
+    console.log('Failed to upload map to S3')
+    return
   }
 
-  // TODO: use AWS API to sync map to S3 bucket
   // TODO: clean logs older than 7 days
 }
 

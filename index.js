@@ -423,6 +423,8 @@ async function init(forceRefresh) {
   try {
     await extractWorldBackup(path)
     console.log(`Successfully extracted world backup to: ${process.env.WORLD_PATH}`)
+    // Remove reference to last backup
+    storage.removeItem('lastBackup')
   } catch (error) {
     console.error(error)
     console.log('Failed to extract world backup')

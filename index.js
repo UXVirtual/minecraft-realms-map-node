@@ -78,7 +78,17 @@ function sleep(ms) {
 
 async function downloadWorldBackup() {
   return new Promise(async (resolve, reject) => {
-    const servers = await getRealmsServers()
+    let servers
+    try {
+      servers = await getRealmsServers()
+    } catch (error) {
+      if (error.statusCode === 401) {
+        // access token is invalid - try again and force refresh token
+        init(true)
+        reject('Auth token expired - retrying and obtaining new token')
+      }
+    }
+
     servers.filter(server => {
       return server.realmsSubscriptionId === process.env.REALMS_SUBSCRIPTION_ID
     })
@@ -388,10 +398,10 @@ async function downloadMinecraftClient() {
   })
 }
 
-async function init() {
+async function init(forceRefresh) {
   await storage.init()
   const accessToken = await storage.getItem('accessToken')
-  if (accessToken) {
+  if (accessToken && !forceRefresh) {
     console.log('Using access token from storage...')
   } else {
     await storeAccessToken()
@@ -443,6 +453,7 @@ async function init() {
     console.error(error)
     console.log('Failed to generate points of interest')
     return
+  }
 
   try {
     await uploadMap(true)

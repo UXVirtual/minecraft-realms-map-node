@@ -257,7 +257,7 @@ renders["Overworld"] = {
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,
-             icon="icons/marker_town.png"),
+             icon="icons/marker_town.png", checked=true),
         dict(name="Villagers - Armorer",
              filterFunction=villagerArmorerFilter,
              icon="icons/marker_profession_armorer.png"),

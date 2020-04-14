@@ -1,5 +1,14 @@
 import os
 
+# Custom Render Modes 
+#   "Note the lack of quotes". From http://docs.overviewer.org/en/latest/config/
+
+# End tweak as recommended on config page "urn down the strength of the shadows, as you’d otherwise end up with a very dark result."
+#   smooth_lighting = [Base(), EdgeLines(), SmoothLighting()]
+end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.2)]
+
+
+
 def filterByProfession(poi, profession):
     if (poi['id'] != 'minecraft:villager'):
         return False
@@ -314,7 +323,7 @@ renders["Woria"] = {
 }
 renders["End"] = {
     "title": "The End",
-    "rendermode": "smooth_lighting",
+    "rendermode": end_smooth_lighting,
     "dimension": "end",
     "world": "Moria",
     "minzoom": 16

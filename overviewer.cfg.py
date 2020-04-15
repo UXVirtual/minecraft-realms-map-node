@@ -1,5 +1,19 @@
 import os
 
+# Custom Render Modes 
+#   "Note the lack of quotes". From http://docs.overviewer.org/en/latest/config/
+
+# End tweak as recommended on config page "urn down the strength of the shadows, as you’d otherwise end up with a very dark result."
+#   smooth_lighting = [Base(), EdgeLines(), SmoothLighting()]
+end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.2)]
+
+# Removing the nether ceiling based on original render mode. Can be carved further if we have a L5 or L60 trnsit system. NoBase might be more appropriete later.
+# nether_smooth_lighting =       [Base(), EdgeLines(), Nether(), SmoothLighting()]
+nether_smooth_lighting_bottom  = [Base(), EdgeLines(), Nether(), SmoothLighting(),             Depth(max=126)]
+nether_smooth_lighting_ceiling = [Base(), EdgeLines(), Nether(), SmoothLighting(strength=0.2), Depth(min=126)]
+
+
+
 def filterByProfession(poi, profession):
     if (poi['id'] != 'minecraft:villager'):
         return False
@@ -307,14 +321,22 @@ renders["Overworld"] = {
 }
 renders["Woria"] = {
     "title": "Woria (Nether)",
-    "rendermode": "nether",
+    "rendermode": nether_smooth_lighting_bottom,
     "dimension": "nether",
     "world": "Moria",
     "minzoom": 16
 }
+renders["WoriaCeiling"] = {
+    "title": "Woria Ceiling",
+    "rendermode": nether_smooth_lighting_ceiling,
+    "dimension": "nether",
+    "world": "Moria",
+    "minzoom": 16,
+    "overlay": ['Woria']
+}
 renders["End"] = {
     "title": "The End",
-    "rendermode": "smooth_lighting",
+    "rendermode": end_smooth_lighting,
     "dimension": "end",
     "world": "Moria",
     "minzoom": 16

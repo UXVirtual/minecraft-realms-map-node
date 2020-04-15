@@ -7,6 +7,11 @@ import os
 #   smooth_lighting = [Base(), EdgeLines(), SmoothLighting()]
 end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.2)]
 
+# Removing the nether ceiling based on original render mode. Can be carved further if we have a L5 or L60 trnsit system. NoBase might be more appropriete later.
+# nether_smooth_lighting =       [Base(), EdgeLines(), Nether(), SmoothLighting()]
+nether_smooth_lighting_bottom  = [Base(), EdgeLines(), Nether(), SmoothLighting(),             Depth(max=126)]
+nether_smooth_lighting_ceiling = [Base(), EdgeLines(), Nether(), SmoothLighting(strength=0.2), Depth(min=126)]
+
 
 
 def filterByProfession(poi, profession):
@@ -316,10 +321,18 @@ renders["Overworld"] = {
 }
 renders["Woria"] = {
     "title": "Woria (Nether)",
-    "rendermode": "nether",
+    "rendermode": nether_smooth_lighting_bottom,
     "dimension": "nether",
     "world": "Moria",
     "minzoom": 16
+}
+renders["WoriaCeiling"] = {
+    "title": "Woria Ceiling",
+    "rendermode": nether_smooth_lighting_ceiling,
+    "dimension": "nether",
+    "world": "Moria",
+    "minzoom": 16,
+    "overlay": ['Woria']
 }
 renders["End"] = {
     "title": "The End",

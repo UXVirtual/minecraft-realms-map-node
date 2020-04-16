@@ -89,6 +89,10 @@ async function downloadWorldBackup() {
       }
     }
 
+    if (!servers) {
+      reject("Couldn't get list of servers. Aborting...")
+    }
+
     servers.filter(server => {
       return server.realmsSubscriptionId === process.env.REALMS_SUBSCRIPTION_ID
     })

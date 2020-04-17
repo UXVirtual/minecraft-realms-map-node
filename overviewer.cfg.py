@@ -9,8 +9,8 @@ end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.2)]
 
 # Removing the nether ceiling based on original render mode. Can be carved further if we have a L5 or L60 trnsit system. NoBase might be more appropriete later.
 # nether_smooth_lighting =       [Base(), EdgeLines(), Nether(), SmoothLighting()]
-nether_smooth_lighting_bottom  = [Base(), EdgeLines(), Nether(), SmoothLighting(),             Depth(max=126)]
-nether_smooth_lighting_ceiling = [Base(), EdgeLines(), Nether(), SmoothLighting(strength=0.2), Depth(min=126)]
+nether_smooth_lighting_bottom  = [Base(), EdgeLines(), Nether(), SmoothLighting(strength=0.5), Depth(max=126)]
+nether_smooth_lighting_ceiling = [Base(), EdgeLines(),           SmoothLighting(strength=0.5), Depth(min=120)]
 
 
 
@@ -223,10 +223,15 @@ renders["Overworld"] = {
              'y': 64,
              'z': 0,
          'name': "Mooshroom Island"},
-         {'id': 'Town',
-             'x': 0,
+        {'id': 'Town',
+             'x': 1750,
              'y': 64,
-             'z': -4400,
+             'z': -1950,
+         'name': "Cy's End Portal"},
+         {'id': 'Town',
+             'x': 22,
+             'y': 64,
+             'z': -4527,
          'name': "CrimsonEbony's Town"},
          {'id': 'Town',
              'x': -1430,
@@ -267,7 +272,12 @@ renders["Overworld"] = {
              'x': -615,
              'y': 64,
              'z': 133,
-         'name': "generic_mine's Base"}
+         'name': "generic_mine's Base"},
+         {'id': 'Town',
+             'x': 770,
+             'y': 64,
+             'z': -5530,
+         'name': "punkhole's Base"}
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,

@@ -5,7 +5,7 @@ import os
 
 # End tweak as recommended on config page "urn down the strength of the shadows, as you’d otherwise end up with a very dark result."
 #   smooth_lighting = [Base(), EdgeLines(), SmoothLighting()]
-end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.2)]
+end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.5)]
 
 # Removing the nether ceiling based on original render mode. Can be carved further if we have a L5 or L60 trnsit system. NoBase might be more appropriete later.
 # nether_smooth_lighting =       [Base(), EdgeLines(), Nether(), SmoothLighting()]

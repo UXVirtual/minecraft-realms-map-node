@@ -254,7 +254,7 @@ renders["Overworld"] = {
              'z': -2668,
          'name': "darkling's Base"},
          {'id': 'Town',
-             'x': -6200,
+             'x': -6790,
              'y': 64,
              'z': 4200,
          'name': "Jaxak's Base"},

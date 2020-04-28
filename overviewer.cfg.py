@@ -5,7 +5,7 @@ import os
 
 # End tweak as recommended on config page "urn down the strength of the shadows, as you’d otherwise end up with a very dark result."
 #   smooth_lighting = [Base(), EdgeLines(), SmoothLighting()]
-end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.2)]
+end_smooth_lighting = [Base(), EdgeLines(), SmoothLighting(strength=0.5)]
 
 # Removing the nether ceiling based on original render mode. Can be carved further if we have a L5 or L60 trnsit system. NoBase might be more appropriete later.
 # nether_smooth_lighting =       [Base(), EdgeLines(), Nether(), SmoothLighting()]
@@ -254,7 +254,7 @@ renders["Overworld"] = {
              'z': -2668,
          'name': "darkling's Base"},
          {'id': 'Town',
-             'x': -6200,
+             'x': -6790,
              'y': 64,
              'z': 4200,
          'name': "Jaxak's Base"},

@@ -292,7 +292,12 @@ renders["Overworld"] = {
              'x': 2132,
              'y': 64,
              'z': -840,
-         'name': "Heliade's Base"}
+         'name': "Heliade's Base"},
+         {'id': 'Town',
+             'x': 1719,
+             'y': 64,
+             'z': -773,
+         'name': "fuzziestUnicorn's Base"}
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,

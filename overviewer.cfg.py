@@ -259,9 +259,9 @@ renders["Overworld"] = {
              'z': -2567,
          'name': "Memorial Island"},
          {'id': 'Town',
-             'x': -6200,
+             'x': -6800,
              'y': 64,
-             'z': 4200,
+             'z': 4292,
          'name': "Jaxak's Base"},
          {'id': 'Town',
              'x': 4400,
@@ -302,7 +302,12 @@ renders["Overworld"] = {
              'x': 1719,
              'y': 64,
              'z': -773,
-         'name': "fuzziestUnicorn's Base"}
+         'name': "fuzziestUnicorn's Base"},
+         {'id': 'Town',
+             'x': -998,
+             'y': 64,
+             'z': -2516,
+         'name': "Bob-Cy's Satellite Towns"}
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,

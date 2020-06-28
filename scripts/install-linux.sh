@@ -13,7 +13,13 @@ build-essential cmake jq wget ncftp s3cmd imagemagick
 # install aws CLI
 sudo pip install awscli
 
+# install textures
+VERSION=1.15 #update to latest version of textures
+mkdir -p ~/.minecraft/versions/${VERSION}/
+wget https://overviewer.org/textures/${VERSION} -O ~/.minecraft/versions/${VERSION}/${VERSION}.jar
+
 # install mapcrafter
+# TODO: replace with minecraft overviewer for Raspberry Pi
 git clone https://github.com/mapcrafter/mapcrafter.git bin/mapcrafter
 cd bin/mapcrafter
 cmake .

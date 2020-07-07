@@ -10,7 +10,7 @@ end_smooth_lighting = [Base(), EdgeLines()]
 # Removing the nether ceiling based on original render mode. Can be carved further if we have a L5 or L60 trnsit system. NoBase might be more appropriete later.
 # nether_smooth_lighting =       [Base(), EdgeLines(), Nether(), SmoothLighting()]
 nether_smooth_lighting_bottom  = [Base(), EdgeLines(), Nether(), Depth(max=126)]
-nether_smooth_lighting_ceiling = [Base(), EdgeLines(), Nether(), Depth(min=126)]
+nether_smooth_lighting_ceiling = [Base(), EdgeLines(),           Depth(min=126)]
 
 
 
@@ -254,9 +254,14 @@ renders["Overworld"] = {
              'z': -2668,
          'name': "darkling's Base"},
          {'id': 'Town',
-             'x': -6200,
+             'x': 1144,
              'y': 64,
-             'z': 4200,
+             'z': -2567,
+         'name': "Memorial Island"},
+         {'id': 'Town',
+             'x': -6800,
+             'y': 64,
+             'z': 4292,
          'name': "Jaxak's Base"},
          {'id': 'Town',
              'x': 4400,
@@ -297,7 +302,17 @@ renders["Overworld"] = {
              'x': 1719,
              'y': 64,
              'z': -773,
-         'name': "fuzziestUnicorn's Base"}
+         'name': "fuzziestUnicorn's Base"},
+         {'id': 'Town',
+             'x': -1140,
+             'y': 64,
+             'z': 973,
+         'name': "Flo-ChineseLegolas's Base"},
+         {'id': 'Town',
+             'x': -998,
+             'y': 64,
+             'z': -2516,
+         'name': "Bob-Cy's Satellite Towns"}
     ],
     'markers': [
         dict(name="Towns", filterFunction=townFilter,

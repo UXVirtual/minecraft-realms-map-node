@@ -364,21 +364,21 @@ renders["Overworld"] = {
              icon="icons/marker_profession_weaponsmith.png")
     ],
 }
-renders["Woria"] = {
-    "title": "Woria (Nether)",
-    "rendermode": nether_smooth_lighting_bottom,
-    "dimension": "nether",
-    "world": "Moria",
-    "minzoom": 16
-}
-renders["WoriaCeiling"] = {
-    "title": "Woria Ceiling",
-    "rendermode": nether_smooth_lighting_ceiling,
-    "dimension": "nether",
-    "world": "Moria",
-    "minzoom": 16,
-    "overlay": ['Woria']
-}
+#renders["Woria"] = {
+#    "title": "Woria (Nether)",
+#    "rendermode": nether_smooth_lighting_bottom,
+#    "dimension": "nether",
+#    "world": "Moria",
+#    "minzoom": 16
+#}
+#renders["WoriaCeiling"] = {
+#    "title": "Woria Ceiling",
+#    "rendermode": nether_smooth_lighting_ceiling,
+#    "dimension": "nether",
+#    "world": "Moria",
+#    "minzoom": 16,
+#    "overlay": ['Woria']
+#}
 renders["End"] = {
     "title": "The End",
     "rendermode": end_smooth_lighting,

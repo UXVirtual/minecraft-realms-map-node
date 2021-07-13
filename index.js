@@ -4,6 +4,8 @@ const rp = require('request-promise')
 const { spawn, execSync } = require('child_process')
 const moment = require('moment')
 const wrap = require('minecraft-wrap')
+const fetch = require('node-fetch');
+const { exit } = require('process')
 
 // TODO: add check that .env file is created
 
@@ -17,7 +19,7 @@ async function storeRefreshToken() {
   console.log('Getting access token...')
   return new Promise(async (resolve, reject) => {
     ygg.refresh(tempAccessToken, clientToken, async function(error, newAccessToken, response) {
-      if (error !== null) {
+      if (!error) {
         reject(error)
       } else {
         await storage.setItem('accessToken', response.accessToken)
@@ -27,27 +29,26 @@ async function storeRefreshToken() {
   })
 }
 
-async function authenticateUser(username, password) {
-  // Authenticate a user
-  console.log('Authenticating with username: ', username)
-
-  const config = {
-    token: process.env.CLIENT_ID, // NOTE: somehow providing client token causes auth process to fail
-    version: process.env.CLIENT_VERSION,
-  }
-
-  config.user = username
-  config.pass = password
-
+async function authenticateUser() {
   return new Promise((resolve, reject) => {
-    ygg.auth(config, (error, data) => {
-      if (error !== null) {
-        console.error('Error: ', error)
-        reject(error)
-      } else {
-        resolve(data)
-      }
-    })
+    console.log('Fetching access credentials...')
+    try{
+      fetch(process.env.AUTH_SERVER_URI, {
+        method: 'post',
+        headers: { 'Authorization': `Bearer ${process.env.AUTH_SERVER_TOKEN}` },
+      })
+      .then(res => res.json())
+      .then(json => {
+        if(json.error){
+          reject(json.error)
+        }else{
+          console.log(json)
+          resolve(json)
+        }
+      })
+    }catch(error){
+      reject(error)
+    }    
   })
 }
 
@@ -82,6 +83,7 @@ async function downloadWorldBackup() {
     try {
       servers = await getRealmsServers()
     } catch (error) {
+      console.log('Error: ',error)
       if (error.statusCode === 401) {
         // access token is invalid - try again and force refresh token
         init(true)
@@ -365,15 +367,8 @@ async function getRealmsServers() {
 
 async function storeAccessToken() {
   return new Promise(async (resolve, reject) => {
-    let username
-    let password
-
-    username = process.env.MOJANG_EMAIL
-    password = process.env.MOJANG_PASSWORD
-
     try {
-      const authData = await authenticateUser(username, password)
-
+      const authData = await authenticateUser()
       await storage.setItem('tempAccessToken', authData.accessToken)
       await storage.setItem('clientToken', authData.clientToken)
 
@@ -408,7 +403,14 @@ async function init(forceRefresh) {
   if (accessToken && !forceRefresh) {
     console.log('Using access token from storage...')
   } else {
-    await storeAccessToken()
+    try{
+      await storeAccessToken()
+    } catch(error){
+      console.log(error)
+      console.log('Exiting...')
+      exit();
+    }
+    
     await storeRefreshToken()
     await storeUUID()
   }

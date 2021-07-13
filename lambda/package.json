@@ -1,0 +1,14 @@
+{
+  "name": "minecraft-realms-map-node-lambda",
+  "version": "1.0.0",
+  "description": "Authentication for Minecraft Realms server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Michael Andrew (michael@uxvirtual.com)",
+  "license": "MIT",
+  "dependencies": {
+    "yggdrasil": "^1.6.0"
+  }
+}
